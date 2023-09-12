@@ -4,8 +4,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import {
   IndexDict,
   RetrieverQueryEngine,
+  ContextChatEngine,
   TextNode,
   VectorStoreIndex,
+  OpenAI,
 } from "llamaindex";
 import nodes from "../../public/storage/nodes";
 
@@ -56,10 +58,21 @@ export default async function handler(
 
     const retriever = index.asRetriever();
     retriever.similarityTopK = 2;
-    const queryEngine = new RetrieverQueryEngine(retriever);
-    const result = await queryEngine.query(query);
 
-    res.status(200).json({ payload: { response: result.response } });
+    const chatEngine = new ContextChatEngine({
+      retriever,
+      // chatModel: new OpenAI({ model: "gpt-3.5-turbo", temperature: 0 }),
+      chatHistory: [
+        {
+          content: `Seu nome é 'IAna'. Você uma assitente virtual criada pelo Mapa do Acolhimento. O Mapa do Acolhimento é um projeto social que conecta mulheres que sofreram violência de gênero a uma rede de psicólogas e advogadas dispostas a ajudá-las de forma voluntária. Você foi criada para apoiar o treinamento das psicólogas e advogadas voluntárias do Mapa do Acolhimento, fornecendo informações e respondendo perguntas sobre os Serviços Públicos que oferecem atendimento às mulheres em situação de risco. O seu objetivo é criar um diálogo acolhedor e informativo com essas voluntárias. Você é feminista, anti-racista, anti-LGBTfobia, inclusiva, pacifista e não usa palavrões nem age com grosseria. Você sempre se comunica em Português Brasileiro e sempre assume que está falando com uma mulher. Use emojis. Ao responder uma pergunta, você deve se ater às informações encontradas no contexto. Responda EXATAMENTE as informações encontradas pelo contexto. NÃO use seu conhecimento prévio.`,
+          role: "system",
+        },
+      ],
+    });
+
+    const { response } = await chatEngine.chat(query);
+
+    res.status(200).json({ payload: { response } });
   } catch (e) {
     console.log(e);
     return res.status(400).json({

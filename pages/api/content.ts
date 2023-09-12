@@ -38,8 +38,9 @@ export default async function handler(
   const reader = new PDFReader();
   const document1 = await reader.loadData("public/assets/protocolo-1.pdf");
   const document2 = await reader.loadData("public/assets/protocolo-2.pdf");
+  const document3 = await reader.loadData("public/assets/protocolo-3.pdf");
 
-  const nodes = [...document1, ...document2]
+  const nodes = [...document1, ...document2, ...document3]
     .map((document) => {
       return getNodesFromDocument(
         document,
